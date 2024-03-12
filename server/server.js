@@ -1,4 +1,6 @@
 import express from 'express';
+import 'dotenv/config';
+import { db } from './libs/dbConnect.js';
 
 const PORT = 8000;
 const app = express();
