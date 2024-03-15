@@ -9,9 +9,10 @@ import {
   Flex,
   Heading,
   Stack,
-  FormErrorMessage
+  FormErrorMessage,
 } from '@chakra-ui/react';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../util.js';
 
 export default function SignUp() {
   const {
@@ -21,7 +22,23 @@ export default function SignUp() {
   } = useForm();
 
   const doSubmit = async values => {
-    toast.success('Sign Up Successful. You are now logged in');
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (res.status === 200) {
+        toast.success('Sign Up Successful. You are now logged in');
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('Something went wrong');
+    }
   };
 
   return (
