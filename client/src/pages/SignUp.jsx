@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FormControl,
   Input,
@@ -13,8 +13,12 @@ import {
 } from '@chakra-ui/react';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../util.js';
+import { useUser } from '../context/UserContext.jsx';
 
 export default function SignUp() {
+  const { updateUser } = useUser();
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     register,
@@ -33,6 +37,8 @@ export default function SignUp() {
       const data = await res.json();
       if (res.status === 200) {
         toast.success('Sign Up Successful. You are now logged in');
+        updateUser(data);
+        navigate('/profile');
       } else {
         toast.error(data.message);
       }
