@@ -67,6 +67,6 @@ export const signOut = async (req, res, next) => {
     res.clearCookie('taskly_token');
     res.status(200).json({ message: 'Sign out successful' });
   } catch (error) {
-    next({ status: 500 });
+    next({ status: 500, error });
   }
 };
