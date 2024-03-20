@@ -11,14 +11,17 @@ import {
   Link,
   Card,
   CardBody,
+  useDisclosure,
 } from '@chakra-ui/react';
 import { BsChevronLeft } from 'react-icons/bs';
+import DeleteConfirmation from '../components/DeleteConfirmation';
 import SingleTaskSkeleton from '../_skeletons/SingleTaskSkeleton';
 
 export default function SingleTask() {
   const [task, setTask] = useState();
   const { taskId } = useParams();
   const navigate = useNavigate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -30,6 +33,20 @@ export default function SingleTask() {
     };
     fetchTask();
   }, []);
+
+  const handleDeleteTask = async () => {
+    const res = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (res.status === 200) {
+      toast.success(data.message);
+      navigate('/tasks');
+    } else {
+      toast.error(data.message);
+    }
+  };
 
   if (!task) {
     return <SingleTaskSkeleton />;
@@ -64,7 +81,7 @@ export default function SingleTask() {
         </CardBody>
       </Card>
       <Flex justify='space-between' mt='5'>
-        <Text as='span' color='red.600'>
+        <Text as='span' color='red.600' cursor='pointer' onClick={onOpen}>
           Delete Task
         </Text>
         <Link
@@ -76,6 +93,13 @@ export default function SingleTask() {
           Edit Task
         </Link>
       </Flex>
+
+      <DeleteConfirmation
+        alertTitle='Delete Task'
+        handleClick={handleDeleteTask}
+        isOpen={isOpen}
+        onClose={onClose}
+      />
     </Box>
   );
 }
