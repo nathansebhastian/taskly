@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { API_BASE_URL } from '../util';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Badge,
   Box,
@@ -18,23 +18,49 @@ import {
   TableContainer,
 } from '@chakra-ui/react';
 import TasksSkeleton from '../_skeletons/TasksSkeleton';
+import Pagination from '../components/Pagination';
+import { BsArrowUp } from 'react-icons/bs';
 
 export default function Tasks() {
   const { user } = useUser();
   const [tasks, setTasks] = useState();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [itemCount, setItemCount] = useState(0);
+  const page = parseInt(searchParams.get('page')) || 1;
+
   useEffect(() => {
     const fetchTasks = async () => {
-      const res = await fetch(`${API_BASE_URL}/tasks/user/${user._id}`, {
-        credentials: 'include',
-      });
-      const { tasks } = await res.json();
+      const query = searchParams.size ? '?' + searchParams.toString() : '';
+      const res = await fetch(
+        `${API_BASE_URL}/tasks/user/${user._id}${query}`,
+        {
+          credentials: 'include',
+        }
+      );
+      const { tasks, taskCount } = await res.json();
       setTasks(tasks);
+      setItemCount(taskCount);
     };
     fetchTasks();
-  }, []);
+  }, [searchParams]);
 
-  if(!tasks){
+  const handleStatusFilter = e => {
+    const value = e.target.value;
+    if (value) {
+      searchParams.set('status', value);
+    } else {
+      searchParams.delete('status');
+    }
+    setSearchParams(searchParams);
+  };
+
+  const handleOrderBy = value => {
+    searchParams.set('orderBy', value);
+    setSearchParams(searchParams);
+  };
+
+  if (!tasks) {
     return <TasksSkeleton />;
   }
   return (
@@ -50,7 +76,7 @@ export default function Tasks() {
       </Heading>
       <Flex justify='space-between' mb='3'>
         <Box w='100px'>
-          <Select placeholder='All'>
+          <Select placeholder='All' onChange={handleStatusFilter}>
             <option value='open'>Open</option>
             <option value='done'>Done</option>
           </Select>
@@ -67,10 +93,42 @@ export default function Tasks() {
         <Table px='3' border='2px solid' borderColor='gray.100'>
           <Thead backgroundColor='gray.100'>
             <Tr>
-              <Th>Task</Th>
-              <Th>Priority</Th>
-              <Th>Status</Th>
-              <Th>Due Date</Th>
+              <Th>
+                <Flex
+                  onClick={() => handleOrderBy('name')}
+                  cursor='pointer'
+                  alignItems='center'
+                >
+                  Task {searchParams.get('orderBy') === 'name' && <BsArrowUp />}
+                </Flex>
+              </Th>
+              <Th>
+                <Flex
+                  onClick={() => handleOrderBy('priority')}
+                  cursor='pointer'
+                  alignItems='center'
+                >
+                  Priority {searchParams.get('orderBy') === 'priority' && <BsArrowUp />}
+                </Flex>
+              </Th>
+              <Th>
+                <Flex
+                  onClick={() => handleOrderBy('status')}
+                  cursor='pointer'
+                  alignItems='center'
+                >
+                  Status {searchParams.get('orderBy') === 'status' && <BsArrowUp />}
+                </Flex>
+              </Th>
+              <Th>
+                <Flex
+                  onClick={() => handleOrderBy('due')}
+                  cursor='pointer'
+                  alignItems='center'
+                >
+                  Due Date {searchParams.get('orderBy') === 'due' && <BsArrowUp />}
+                </Flex>
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -99,6 +157,7 @@ export default function Tasks() {
           </Tbody>
         </Table>
       </TableContainer>
+      <Pagination itemCount={itemCount} pageSize={4} currentPage={page} />
     </Box>
   );
 }
